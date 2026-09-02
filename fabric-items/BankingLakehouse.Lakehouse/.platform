@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Lakehouse",
+    "displayName": "BankingLakehouse",
+    "description": "Synthetic account and transaction data for the FSI analytics POC."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "9a208fcf-77ae-442e-89e8-8d021a2c2d5d"
+  }
+}

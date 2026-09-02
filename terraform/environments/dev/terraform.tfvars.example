@@ -1,0 +1,28 @@
+subscription_id              = "00000000-0000-0000-0000-000000000000"
+tenant_id                    = "00000000-0000-0000-0000-000000000000"
+location                     = "westus3"
+resource_group_name          = "rg-fabric-banking-dev-westus3"
+capacity_name                = "fabricbankingdevf2example"
+state_resource_group_name    = "rg-fabric-banking-tfstate"
+state_storage_account_name   = "stfabtfexample1234"
+fabric_capacity_id           = "00000000-0000-0000-0000-000000000000"
+fabric_admin_group_id        = "00000000-0000-0000-0000-000000000001"
+fabric_developer_group_id    = "00000000-0000-0000-0000-000000000002"
+plan_service_principal_id    = "00000000-0000-0000-0000-000000000003"
+apply_service_principal_id   = "00000000-0000-0000-0000-000000000004"
+content_service_principal_id = "00000000-0000-0000-0000-000000000005"
+capacity_admin_members       = ["admin@contoso.com"]
+
+enable_git_integration     = false
+azure_devops_organization  = "your-organization"
+azure_devops_project       = "FabricBankingTemplate"
+azure_devops_repository    = "fabric-banking-cicd-template"
+fabric_git_connection_id   = "00000000-0000-0000-0000-000000000006"
+enable_feature_workspace   = false
+feature_branch             = "feature/banking-demo"
+workload_name              = "fabric-banking-cicd"
+owner                      = "platform-team"
+
+enable_private_agent = false
+agent_ssh_public_key  = "ssh-rsa REPLACE_WITH_AN_APPROVED_PUBLIC_KEY"
+agent_vm_size         = "Standard_D2ls_v6"

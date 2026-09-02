@@ -1,0 +1,20 @@
+core:
+  workspace:
+    DEV: Fabric-Dev
+    PROD: Fabric-Prod
+  repository_directory: "."
+  item_types_in_scope:
+    - Lakehouse
+    - SQLDatabase
+    - VariableLibrary
+    - Notebook
+    - DataPipeline
+    - SemanticModel
+    - Report
+  parameter: "parameter.yml"
+
+publish:
+  exclude_regex: "^DONT_DEPLOY.*"
+
+unpublish:
+  exclude_regex: "^KEEP_.*"

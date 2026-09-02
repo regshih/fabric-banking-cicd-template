@@ -1,0 +1,116 @@
+name: fabric-deploy-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+  paths:
+    include:
+      - fabric-items/**
+      - pipelines/**
+
+pr: none
+
+variables:
+  - group: fabric-shared
+
+stages:
+  - stage: Deploy_Dev
+    displayName: Deploy Fabric content to Dev
+    variables:
+      - group: fabric-dev
+    jobs:
+      - deployment: Deploy
+        environment: fabric-dev-content
+        pool:
+          name: $(AGENT_POOL_NAME)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - bash: |
+                    set -euo pipefail
+                    python -m venv "$(Agent.TempDirectory)/fabric-venv"
+                    echo "##vso[task.prependpath]$(Agent.TempDirectory)/fabric-venv/bin"
+                    "$(Agent.TempDirectory)/fabric-venv/bin/python" --version
+                  displayName: Create isolated Python runtime
+
+                - task: AzureCLI@2
+                  displayName: Deploy and verify Dev items
+                  inputs:
+                    azureSubscription: sc-fabric-content
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      python -m pip install --disable-pip-version-check --requirement requirements.txt
+                      python tests/validate_repo.py
+                      python pipelines/scripts/deploy_fabric.py \
+                        --environment DEV \
+                        --workspace-id "$(FABRIC_WORKSPACE_ID)"
+                      python pipelines/scripts/set_active_value_set.py \
+                        --workspace-id "$(FABRIC_WORKSPACE_ID)" \
+                        --value-set DEV
+                      python pipelines/scripts/verify_fabric.py \
+                        --workspace-id "$(FABRIC_WORKSPACE_ID)" \
+                        --expected-value-set DEV
+
+  - stage: Promote_Prod
+    displayName: Promote Dev to Prod
+    dependsOn: Deploy_Dev
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    variables:
+      - group: fabric-prod
+    jobs:
+      - deployment: Promote
+        displayName: Approved Fabric promotion
+        environment: fabric-prod-content
+        pool:
+          name: $(AGENT_POOL_NAME)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - bash: |
+                    set -euo pipefail
+                    python -m venv "$(Agent.TempDirectory)/fabric-venv"
+                    echo "##vso[task.prependpath]$(Agent.TempDirectory)/fabric-venv/bin"
+                    "$(Agent.TempDirectory)/fabric-venv/bin/python" --version
+                  displayName: Create isolated Python runtime
+
+                - task: AzureCLI@2
+                  displayName: Promote, activate PROD values, and verify
+                  inputs:
+                    azureSubscription: sc-fabric-content
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      python -m pip install --disable-pip-version-check --requirement requirements.txt
+                      set +e
+                      python pipelines/scripts/promote_fabric.py \
+                        --pipeline-name "$(FABRIC_DEPLOYMENT_PIPELINE_NAME)" \
+                        --note "Azure Pipelines release $(Build.BuildNumber)"
+                      promotion_status=$?
+                      set -e
+                      if [ "${promotion_status}" -eq 3 ]; then
+                        echo "Deployment-pipeline pairing conflict detected; deploying the reviewed Git definitions directly to Prod."
+                        python pipelines/scripts/deploy_fabric.py \
+                          --environment PROD \
+                          --workspace-id "$(FABRIC_WORKSPACE_ID)"
+                      elif [ "${promotion_status}" -ne 0 ]; then
+                        exit "${promotion_status}"
+                      fi
+                      python pipelines/scripts/set_active_value_set.py \
+                        --workspace-id "$(FABRIC_WORKSPACE_ID)" \
+                        --value-set PROD
+                      python pipelines/scripts/verify_fabric.py \
+                        --workspace-id "$(FABRIC_WORKSPACE_ID)" \
+                        --expected-value-set PROD

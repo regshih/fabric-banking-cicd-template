@@ -1,0 +1,64 @@
+table BankingSummary
+	lineageTag: 60000000-0000-4000-8000-000000000061
+
+	measure 'Total Balance' = SUM(BankingSummary[Balance])
+		formatString: $#,0
+		lineageTag: 60000000-0000-4000-8000-000000000062
+
+	measure 'Transaction Count' = SUM(BankingSummary[TransactionCount])
+		formatString: #,0
+		lineageTag: 60000000-0000-4000-8000-000000000063
+
+	measure 'Flagged Transactions' = SUM(BankingSummary[FlaggedCount])
+		formatString: #,0
+		lineageTag: 60000000-0000-4000-8000-000000000064
+
+	measure 'Flag Rate' = DIVIDE([Flagged Transactions], [Transaction Count])
+		formatString: 0.0%
+		lineageTag: 60000000-0000-4000-8000-000000000065
+
+	column Segment
+		dataType: string
+		lineageTag: 60000000-0000-4000-8000-000000000066
+		summarizeBy: none
+		sourceColumn: Segment
+
+	column Balance
+		dataType: double
+		formatString: $#,0
+		lineageTag: 60000000-0000-4000-8000-000000000067
+		summarizeBy: sum
+		sourceColumn: Balance
+
+	column TransactionCount
+		dataType: int64
+		formatString: 0
+		lineageTag: 60000000-0000-4000-8000-000000000068
+		summarizeBy: sum
+		sourceColumn: TransactionCount
+
+	column FlaggedCount
+		dataType: int64
+		formatString: 0
+		lineageTag: 60000000-0000-4000-8000-000000000069
+		summarizeBy: sum
+		sourceColumn: FlaggedCount
+
+	partition BankingSummary = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [Segment = text, Balance = number, TransactionCount = Int64.Type, FlaggedCount = Int64.Type],
+				        {
+				            {"Retail", 12500000.00, 3400, 102},
+				            {"SME", 8700000.00, 1200, 48},
+				            {"Private", 19400000.00, 400, 12}
+				        }
+				    )
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

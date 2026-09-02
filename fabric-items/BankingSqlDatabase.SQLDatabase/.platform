@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SQLDatabase",
+    "displayName": "BankingSqlDatabase",
+    "description": "Reference configuration database for the synthetic banking POC."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "e7c5b7f5-7c7e-4b3a-bbe7-c8649bc3de99"
+  }
+}

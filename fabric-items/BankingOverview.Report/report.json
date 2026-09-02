@@ -1,0 +1,28 @@
+{
+  "config": "{\"version\":\"5.59\",\"activeSectionIndex\":0,\"defaultDrillFilterOtherVisuals\":true,\"linguisticSchemaSyncVersion\":2,\"settings\":{\"useNewFilterPaneExperience\":true,\"allowChangeFilterTypes\":true,\"useEnhancedTooltips\":true,\"exportDataMode\":1}}",
+  "layoutOptimization": 0,
+  "resourcePackages": [],
+  "sections": [
+    {
+      "config": "{}",
+      "displayName": "Banking Overview",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "bankingoverviewpage01",
+      "ordinal": 0,
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"segmenttable01\",\"layouts\":[{\"id\":0,\"position\":{\"x\":80,\"y\":100,\"z\":0,\"width\":1120,\"height\":480,\"tabOrder\":0}}],\"singleVisual\":{\"visualType\":\"tableEx\",\"projections\":{\"Values\":[{\"queryRef\":\"BankingSummary.Segment\"},{\"queryRef\":\"Sum(BankingSummary.Balance)\"},{\"queryRef\":\"BankingSummary.Transaction Count\"},{\"queryRef\":\"BankingSummary.Flagged Transactions\"},{\"queryRef\":\"BankingSummary.Flag Rate\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"b\",\"Entity\":\"BankingSummary\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"b\"}},\"Property\":\"Segment\"},\"Name\":\"BankingSummary.Segment\"},{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"b\"}},\"Property\":\"Balance\"}},\"Function\":0},\"Name\":\"Sum(BankingSummary.Balance)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"b\"}},\"Property\":\"Transaction Count\"},\"Name\":\"BankingSummary.Transaction Count\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"b\"}},\"Property\":\"Flagged Transactions\"},\"Name\":\"BankingSummary.Flagged Transactions\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"b\"}},\"Property\":\"Flag Rate\"},\"Name\":\"BankingSummary.Flag Rate\"}]},\"drillFilterOtherVisuals\":true}}",
+          "filters": "[]",
+          "height": 480.0,
+          "width": 1120.0,
+          "x": 80.0,
+          "y": 100.0,
+          "z": 0.0
+        }
+      ],
+      "width": 1280.0
+    }
+  ]
+}

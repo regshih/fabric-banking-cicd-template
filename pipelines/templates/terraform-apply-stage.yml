@@ -1,0 +1,90 @@
+parameters:
+  - name: environment
+    type: string
+  - name: variableGroup
+    type: string
+  - name: azureEnvironment
+    type: string
+  - name: condition
+    type: string
+
+stages:
+  - stage: Apply_${{ parameters.environment }}
+    displayName: Terraform apply (${{ parameters.environment }})
+    condition: ${{ parameters.condition }}
+    variables:
+      - group: fabric-shared
+      - group: ${{ parameters.variableGroup }}
+    jobs:
+      - deployment: Apply
+        displayName: Apply approved plan
+        environment: ${{ parameters.azureEnvironment }}
+        pool:
+          name: $(AGENT_POOL_NAME)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - bash: bash pipelines/scripts/install-terraform.sh
+                  displayName: Install verified Terraform CLI
+                  env:
+                    TERRAFORM_VERSION: $(TERRAFORM_VERSION)
+
+                - task: AzureCLI@2
+                  displayName: Plan and apply exact commit
+                  inputs:
+                    azureSubscription: sc-fabric-apply
+                    addSpnToEnvironment: true
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      export ARM_CLIENT_ID="${servicePrincipalId}"
+                      export ARM_TENANT_ID="${tenantId}"
+                      export ARM_OIDC_TOKEN="${idToken}"
+                      export ARM_USE_OIDC=true
+                      workdir="terraform/environments/${{ parameters.environment }}"
+                      terraform -chdir="${workdir}" init -input=false \
+                        -backend-config="resource_group_name=$(TFSTATE_RESOURCE_GROUP)" \
+                        -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
+                        -backend-config="container_name=$(TFSTATE_CONTAINER)" \
+                        -backend-config="key=${{ parameters.environment }}.tfstate" \
+                        -backend-config="tenant_id=$(AZURE_TENANT_ID)" \
+                        -backend-config="client_id=${servicePrincipalId}" \
+                        -backend-config="oidc_token=${idToken}" \
+                        -backend-config="use_oidc=true"
+                      terraform -chdir="${workdir}" validate
+                      terraform -chdir="${workdir}" plan -input=false -out="${{ parameters.environment }}.tfplan"
+                      terraform -chdir="${workdir}" apply -input=false -auto-approve "${{ parameters.environment }}.tfplan"
+                  env:
+                    TF_IN_AUTOMATION: "true"
+                    TF_INPUT: "false"
+                    TF_VAR_subscription_id: $(AZURE_SUBSCRIPTION_ID)
+                    TF_VAR_tenant_id: $(AZURE_TENANT_ID)
+                    TF_VAR_resource_group_name: $(RESOURCE_GROUP_NAME)
+                    TF_VAR_capacity_name: $(CAPACITY_NAME)
+                    TF_VAR_state_resource_group_name: $(TFSTATE_RESOURCE_GROUP)
+                    TF_VAR_state_storage_account_name: $(TFSTATE_STORAGE_ACCOUNT)
+                    TF_VAR_workload_name: $(WORKLOAD_NAME)
+                    TF_VAR_owner: $(RESOURCE_OWNER)
+                    TF_VAR_fabric_admin_group_id: $(FABRIC_ADMIN_GROUP_ID)
+                    TF_VAR_fabric_developer_group_id: $(FABRIC_DEVELOPER_GROUP_ID)
+                    TF_VAR_plan_service_principal_id: $(PLAN_SERVICE_PRINCIPAL_OBJECT_ID)
+                    TF_VAR_apply_service_principal_id: $(APPLY_SERVICE_PRINCIPAL_OBJECT_ID)
+                    TF_VAR_content_service_principal_id: $(CONTENT_SERVICE_PRINCIPAL_OBJECT_ID)
+                    TF_VAR_capacity_admin_members: '["$(CAPACITY_ADMIN_MEMBER)"]'
+                    TF_VAR_fabric_capacity_id: $(FABRIC_CAPACITY_ID)
+                    TF_VAR_enable_feature_workspace: $(ENABLE_FEATURE_WORKSPACE)
+                    TF_VAR_feature_branch: $(FEATURE_BRANCH)
+                    TF_VAR_enable_git_integration: $(ENABLE_GIT_INTEGRATION)
+                    TF_VAR_azure_devops_organization: $(AZDO_ORGANIZATION)
+                    TF_VAR_azure_devops_project: $(AZDO_PROJECT)
+                    TF_VAR_azure_devops_repository: $(AZDO_REPOSITORY)
+                    TF_VAR_fabric_git_connection_id: $(FABRIC_GIT_CONNECTION_ID)
+                    TF_VAR_enable_private_agent: $(ENABLE_PRIVATE_AGENT)
+                    TF_VAR_agent_ssh_public_key: $(AGENT_SSH_PUBLIC_KEY)
+                    TF_VAR_agent_vm_size: $(AGENT_VM_SIZE)
+                    TF_VAR_dev_workspace_id: $(DEV_WORKSPACE_ID)

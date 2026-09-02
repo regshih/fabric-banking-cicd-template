@@ -1,0 +1,126 @@
+parameters:
+  - name: environment
+    type: string
+  - name: variableGroup
+    type: string
+  - name: serviceConnection
+    type: string
+
+stages:
+  - stage: Plan_${{ parameters.environment }}
+    displayName: Terraform plan (${{ parameters.environment }})
+    variables:
+      - group: fabric-shared
+      - group: ${{ parameters.variableGroup }}
+    jobs:
+      - job: Plan
+        displayName: Validate and plan
+        pool:
+          name: $(AGENT_POOL_NAME)
+        steps:
+          - checkout: self
+            clean: true
+
+          - bash: bash pipelines/scripts/install-terraform.sh
+            displayName: Install verified Terraform CLI
+            env:
+              TERRAFORM_VERSION: $(TERRAFORM_VERSION)
+
+          - bash: |
+              set -euo pipefail
+              bash pipelines/scripts/install-tflint.sh
+              export PATH="${HOME}/.local/bin:${PATH}"
+              tflint --init
+              tflint --chdir=terraform/bootstrap
+              tflint --chdir=terraform/environments/dev
+              tflint --chdir=terraform/environments/prod
+            displayName: Lint Terraform
+            env:
+              TFLINT_VERSION: $(TFLINT_VERSION)
+
+          - bash: |
+              set -euo pipefail
+              python -m venv "$(Agent.TempDirectory)/fabric-venv"
+              echo "##vso[task.prependpath]$(Agent.TempDirectory)/fabric-venv/bin"
+              "$(Agent.TempDirectory)/fabric-venv/bin/python" --version
+            displayName: Create isolated Python runtime
+
+          - bash: |
+              set -euo pipefail
+              python -m pip install --disable-pip-version-check --requirement requirements.txt
+              python tests/validate_repo.py
+            displayName: Validate Fabric definitions
+
+          - bash: |
+              set -euo pipefail
+              python -m venv "$(Agent.TempDirectory)/checkov-venv"
+              "$(Agent.TempDirectory)/checkov-venv/bin/python" -m pip install --disable-pip-version-check --requirement requirements-dev.txt
+              "$(Agent.TempDirectory)/checkov-venv/bin/checkov" --directory terraform --framework terraform --compact --quiet
+            displayName: Scan Terraform security
+
+          - task: AzureCLI@2
+            displayName: Terraform plan
+            inputs:
+              azureSubscription: ${{ parameters.serviceConnection }}
+              addSpnToEnvironment: true
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                export ARM_CLIENT_ID="${servicePrincipalId}"
+                export ARM_TENANT_ID="${tenantId}"
+                export ARM_OIDC_TOKEN="${idToken}"
+                export ARM_USE_OIDC=true
+                workdir="terraform/environments/${{ parameters.environment }}"
+                terraform -chdir="${workdir}" fmt -check -recursive
+                terraform -chdir="${workdir}" init -input=false \
+                  -backend-config="resource_group_name=$(TFSTATE_RESOURCE_GROUP)" \
+                  -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
+                  -backend-config="container_name=$(TFSTATE_CONTAINER)" \
+                  -backend-config="key=${{ parameters.environment }}.tfstate" \
+                  -backend-config="tenant_id=$(AZURE_TENANT_ID)" \
+                  -backend-config="client_id=${servicePrincipalId}" \
+                  -backend-config="oidc_token=${idToken}" \
+                  -backend-config="use_oidc=true"
+                terraform -chdir="${workdir}" validate
+                # Fabric role-assignment reads require Workspace Admin. PR validation
+                # deliberately uses the read-only plan identity, so it compares the
+                # reviewed configuration with remote state without refreshing live APIs.
+                # The approved apply job performs a fresh plan with the privileged identity.
+                terraform -chdir="${workdir}" plan -refresh=false -input=false -out="$(Build.ArtifactStagingDirectory)/${{ parameters.environment }}.tfplan"
+                terraform -chdir="${workdir}" show -no-color "$(Build.ArtifactStagingDirectory)/${{ parameters.environment }}.tfplan" > "$(Build.ArtifactStagingDirectory)/${{ parameters.environment }}.plan.txt"
+            env:
+              TF_IN_AUTOMATION: "true"
+              TF_INPUT: "false"
+              TF_VAR_subscription_id: $(AZURE_SUBSCRIPTION_ID)
+              TF_VAR_tenant_id: $(AZURE_TENANT_ID)
+              TF_VAR_resource_group_name: $(RESOURCE_GROUP_NAME)
+              TF_VAR_capacity_name: $(CAPACITY_NAME)
+              TF_VAR_state_resource_group_name: $(TFSTATE_RESOURCE_GROUP)
+              TF_VAR_state_storage_account_name: $(TFSTATE_STORAGE_ACCOUNT)
+              TF_VAR_workload_name: $(WORKLOAD_NAME)
+              TF_VAR_owner: $(RESOURCE_OWNER)
+              TF_VAR_fabric_admin_group_id: $(FABRIC_ADMIN_GROUP_ID)
+              TF_VAR_fabric_developer_group_id: $(FABRIC_DEVELOPER_GROUP_ID)
+              TF_VAR_plan_service_principal_id: $(PLAN_SERVICE_PRINCIPAL_OBJECT_ID)
+              TF_VAR_apply_service_principal_id: $(APPLY_SERVICE_PRINCIPAL_OBJECT_ID)
+              TF_VAR_content_service_principal_id: $(CONTENT_SERVICE_PRINCIPAL_OBJECT_ID)
+              TF_VAR_capacity_admin_members: '["$(CAPACITY_ADMIN_MEMBER)"]'
+              TF_VAR_fabric_capacity_id: $(FABRIC_CAPACITY_ID)
+              TF_VAR_enable_feature_workspace: $(ENABLE_FEATURE_WORKSPACE)
+              TF_VAR_feature_branch: $(FEATURE_BRANCH)
+              TF_VAR_enable_git_integration: $(ENABLE_GIT_INTEGRATION)
+              TF_VAR_azure_devops_organization: $(AZDO_ORGANIZATION)
+              TF_VAR_azure_devops_project: $(AZDO_PROJECT)
+              TF_VAR_azure_devops_repository: $(AZDO_REPOSITORY)
+              TF_VAR_fabric_git_connection_id: $(FABRIC_GIT_CONNECTION_ID)
+              TF_VAR_enable_private_agent: $(ENABLE_PRIVATE_AGENT)
+              TF_VAR_agent_ssh_public_key: $(AGENT_SSH_PUBLIC_KEY)
+              TF_VAR_agent_vm_size: $(AGENT_VM_SIZE)
+              TF_VAR_dev_workspace_id: $(DEV_WORKSPACE_ID)
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish reviewed plan
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: terraform-${{ parameters.environment }}-plan

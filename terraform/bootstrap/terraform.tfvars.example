@@ -1,0 +1,7 @@
+subscription_id            = "00000000-0000-0000-0000-000000000000"
+tenant_id                  = "00000000-0000-0000-0000-000000000000"
+location                   = "westus3"
+state_resource_group_name  = "rg-fabric-banking-tfstate"
+state_storage_account_name = "stfabtfexample1234" # Must be globally unique.
+resource_prefix            = "fabric-banking"
+owner                      = "platform-team"

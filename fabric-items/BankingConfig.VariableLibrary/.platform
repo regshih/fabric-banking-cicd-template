@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "VariableLibrary",
+    "displayName": "BankingConfig",
+    "description": "Environment-specific, non-secret Fabric configuration."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "8f974fc2-d030-4b38-9072-e70eda75128d"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "BankingOverview",
+    "description": "Synthetic banking KPI overview for the CI/CD POC."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "e4974e0e-4164-4b87-ab59-bebf83b1f10f"
+  }
+}

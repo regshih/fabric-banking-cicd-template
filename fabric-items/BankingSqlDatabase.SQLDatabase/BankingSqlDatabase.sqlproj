@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <Sdk Name="Microsoft.Build.Sql" Version="1.0.0" />
+  <PropertyGroup>
+    <Name>BankingSqlDatabase</Name>
+    <ProjectGuid>{e7c5b7f5-7c7e-4b3a-bbe7-c8649bc3de99}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.SqlDbFabricDatabaseSchemaProvider</DSP>
+    <ModelCollation>1033, CI</ModelCollation>
+    <TreatTSqlWarningsAsErrors>true</TreatTSqlWarningsAsErrors>
+  </PropertyGroup>
+</Project>

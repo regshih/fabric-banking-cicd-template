@@ -1,0 +1,5 @@
+azure-identity>=1.25,<2
+fabric-cicd>=1.3,<2
+jsonschema>=4.25,<5
+PyYAML>=6.0,<7
+requests>=2.32,<3

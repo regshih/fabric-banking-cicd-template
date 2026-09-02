@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "IngestTransactions",
+    "description": "Generates deterministic synthetic banking data and writes curated Lakehouse tables."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "ea7e0343-6ccc-44ed-8bd4-1f572a8b9727"
+  }
+}

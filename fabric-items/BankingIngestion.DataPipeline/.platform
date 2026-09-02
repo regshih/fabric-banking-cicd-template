@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "BankingIngestion",
+    "description": "Runs synthetic transaction ingestion using environment-specific configuration."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "fe894b0a-923e-46b4-b290-12ae45a17caf"
+  }
+}

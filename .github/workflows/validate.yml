@@ -1,0 +1,63 @@
+name: Validate template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check --requirement requirements.txt --requirement requirements-dev.txt
+
+      - name: Validate Fabric definitions
+        run: |
+          python tests/validate_repo.py
+          python tests/validate_public_repo.py
+
+      - name: Scan tracked files for secrets
+        shell: bash
+        run: detect-secrets scan $(git ls-files) --exclude-files '.*\.terraform\.lock\.hcl$' > /tmp/secrets.json && python -c 'import json; d=json.load(open("/tmp/secrets.json")); assert not d["results"], d["results"]'
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: "1.16.1"
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive terraform
+
+      - name: Validate Terraform roots
+        shell: bash
+        run: |
+          set -euo pipefail
+          for root in terraform/bootstrap terraform/environments/dev terraform/environments/prod; do
+            terraform -chdir="$root" init -backend=false -input=false
+            terraform -chdir="$root" validate
+          done
+
+      - name: Scan Terraform configuration
+        run: checkov --directory terraform --framework terraform --compact --quiet

@@ -1,0 +1,35 @@
+name: terraform-plan-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+      - feature/*
+  paths:
+    include:
+      - terraform/**
+      - fabric-items/**
+      - pipelines/**
+      - tests/**
+
+variables:
+  - name: TERRAFORM_VERSION
+    value: "1.16.1"
+  - name: TFLINT_VERSION
+    value: "0.64.0"
+
+stages:
+  - template: templates/terraform-plan-stage.yml
+    parameters:
+      environment: dev
+      variableGroup: fabric-dev
+      serviceConnection: sc-fabric-plan
+
+  - template: templates/terraform-plan-stage.yml
+    parameters:
+      environment: prod
+      variableGroup: fabric-prod
+      serviceConnection: sc-fabric-plan

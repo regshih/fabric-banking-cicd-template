@@ -1,0 +1,38 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfvars
+!*.tfvars.example
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.key
+secrets.*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated output
+artifacts/
+test-results/
+*.log

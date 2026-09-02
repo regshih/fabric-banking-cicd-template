@@ -1,0 +1,31 @@
+name: terraform-apply-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+  paths:
+    include:
+      - terraform/**
+
+pr: none
+
+variables:
+  - name: TERRAFORM_VERSION
+    value: "1.16.1"
+
+stages:
+  - template: templates/terraform-apply-stage.yml
+    parameters:
+      environment: dev
+      variableGroup: fabric-dev
+      azureEnvironment: fabric-dev-infrastructure
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+
+  - template: templates/terraform-apply-stage.yml
+    parameters:
+      environment: prod
+      variableGroup: fabric-prod
+      azureEnvironment: fabric-prod-infrastructure
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')

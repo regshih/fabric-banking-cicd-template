@@ -1,0 +1,22 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "Generate synthetic transactions",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "ea7e0343-6ccc-44ed-8bd4-1f572a8b9727",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        }
+      }
+    ]
+  }
+}
