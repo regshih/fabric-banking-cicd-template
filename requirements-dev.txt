@@ -1,2 +1,2 @@
 checkov==3.3.10
-detect-secrets==1.5.47
+detect-secrets==1.5.0
