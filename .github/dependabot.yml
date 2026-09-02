@@ -11,6 +11,10 @@ updates:
       terraform-providers:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: hashicorp/azurerm
+        update-types:
+          - version-update:semver-major
     open-pull-requests-limit: 3
 
   - package-ecosystem: pip
