@@ -15,7 +15,7 @@ Thank you for helping improve this Microsoft Fabric CI/CD reference implementati
 Run:
 
 ```bash
-python -m pip install --requirement requirements.txt --requirement requirements-dev.txt
+python -m pip install --requirement requirements.txt
 python tests/validate_repo.py
 python tests/validate_public_repo.py
 terraform fmt -check -recursive terraform
@@ -27,6 +27,9 @@ terraform -chdir=terraform/environments/dev validate
 terraform -chdir=terraform/environments/prod init -backend=false
 terraform -chdir=terraform/environments/prod validate
 
+python -m venv .security-venv
+source .security-venv/bin/activate
+python -m pip install --requirement requirements-dev.txt
 checkov --directory terraform --framework terraform --compact
 ```
 

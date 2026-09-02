@@ -24,6 +24,7 @@ secrets.*
 __pycache__/
 *.py[cod]
 .venv/
+.security-venv/
 .pytest_cache/
 
 # Editors and operating systems
